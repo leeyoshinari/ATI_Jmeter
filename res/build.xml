@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="ant-jmeter-test" default="run" basedir=".">
     <tstamp>
-        <format property="time" pattern="yyyyMMddhhmm"/>
+        <format property="time" pattern="yyyyMMddhhmmss"/>
     </tstamp>
-	<!-- 测试报告标题名称，可以是中文-->
-    <property name="report.title" value="辅助-协同一体化测试报告"/>
+	<!-- 测试报告标题名称 -->
+    <property name="report.title" value="百度接口自动化测试报告"/>
     <!-- 需要改成自己本地的 Jmeter 目录-->
-    <property name="jmeter.home" value="../jmeter4.0"/>
+    <property name="jmeter.home" value="D:/apache-jmeter-5.2.1"/>
     <!-- jmeter生成jtl格式的结果报告的路径-->
-    <property name="jmeter.result.jtl.dir" value="./report"/>
+    <property name="jmeter.result.jtl.dir" value="../../report"/>
     <!-- jmeter生成html格式的结果报告的路径-->
-    <property name="jmeter.result.html.dir" value="./report"/>
-    <!-- 生成的报告的前缀名，建议设置成英文-->
-    <property name="ReportName" value="Cooperate_AutoTest_Report"/>
-	
+    <property name="jmeter.result.html.dir" value="../../report"/>
+    <!-- 生成的报告的前缀名，建议设置成英文，否则部分Linux系统会乱码 -->
+    <property name="ReportName" value="Baidu_AutoTest_Report"/>
+
     <property name="jmeter.result.jtlName" value="${jmeter.result.jtl.dir}/${ReportName}${time}.jtl"/>
     <property name="jmeter.result.htmlName" value="${jmeter.result.html.dir}/${ReportName}${time}.html"/>
     <target name="run">
@@ -23,13 +23,8 @@
     <target name="test">
         <taskdef name="jmeter" classname="org.programmerplanet.ant.taskdefs.jmeter.JMeterTask"/>
         <jmeter jmeterhome="${jmeter.home}" resultlog="${jmeter.result.jtlName}">
-            <!-- 声明要运行的脚本。"*.jmx"指包含此目录下的所有jmeter脚本，建议设置成英文名-->
-            <testplans dir="./" includes="xtyth.jmx"/>
-            <testplans dir="./../../case/case-mgr" includes="*.jmx"/>
-            <testplans dir="./../../case/dossier" includes="*.jmx"/>
-            <testplans dir="./../../case/eds" includes="*.jmx"/>
-            <testplans dir="./../../case/evidence-check" includes="*.jmx"/>
-            <!--testplans dir="./../../case/marking" includes="*.jmx"/-->
+            <!-- 声明要运行的脚本。"*.jmx"指包含此目录下的所有jmeter脚本，建议设置成英文名，否则部分Linux系统会乱码 -->
+            <testplans dir="./" includes="baidu.jmx"/>
             <property name="jmeter.save.saveservice.output_format" value="xml"/>
         </jmeter>
     </target>
