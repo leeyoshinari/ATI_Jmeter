@@ -9,6 +9,7 @@
 4. 通过get请求触发任务执行，调度方式灵活；
 5. 具有定时功能，可周期性或者定时执行测试任务；
 6. 通过监控端口，当服务重启后，可自动执行测试任务；
+7. 支持自动从git拉取最新版本；
 
 实现：<br>
 1. 使用Ant执行Jmeter脚本，并生成测试报告；
@@ -17,6 +18,7 @@
 4. 通过get请求触发测试任务的执行；
 5. 通过线程池+队列的方式执行测试任务，可灵活设置线程池大小；
 6. 使用aiohttp框架启动后台服务，将测试报告加入到静态资源中，可通过链接访问；
+7. 每次执行测试任务前，自动从git拉取最新版本；
 
 生成的测试报告：<br>
 1. Ant生成的测试报告，[长这个样子](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/report/Baidu_AutoTest_Report20200512012447.html) <br>
@@ -32,7 +34,7 @@
 >> (5) 其他未标注出来的修改点，主要是默认模板没有我想看到的数据，把一些没有展示的数据展示出来，把一些“没用的”数据隐藏起来，以及一些样式的修改；<br>
 
 > build.xml文件如下，具体配置已详细说明。强调：为了方便测试报告统一管理，也为了能够自动发送邮件，所有系统的build.xml中的测试报告路径必须是同一个文件夹<br>
-    ![](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/res/build.png)
+    ![build文件](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/res/build.png)
 
 2、克隆repository<br>
     ```git clone https://github.com/leeyoshinari/ATI_Jmeter.git``` <br>
@@ -42,7 +44,7 @@
 > (2)针对不同系统的不同测试用例，可单独再放入一个文件夹中管理，例如：百度的测试用例放在`baidu`中、百度的BVT测试用例放在`baidu_bvt`中、腾讯的测试用例放在`tencent`中；<br>
 > (3)每个系统的测试用例文件夹中，都需要放一个配置好的`build.xml`文件；注意：所有系统的测试报告路径必须是同一个文件夹；<br>
 > (4)测试用例文件夹具体结构如下：<br>
-> ![]()
+> ![文件夹结构](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/res/file_structure.png)
 
 强烈建议文件夹及文件名称使用英文<br>
 为什么要按照上面的要求放置测试用例？这样放置方便执行测试任务，通过get请求`http://ip:port/run/baidu`就可以执行百度的测试用例，请求`http://ip:port/run/baidu_bvt`就可以执行百度BVT的测试用例。<br>
@@ -50,7 +52,8 @@
 4、修改配置文件config.conf<br>
 > (1)线程池大小，建议设置1就够了；如确实调度较多测试用例的执行，可酌情增加；<br>
 > (2)测试用例路径和测试报告路径，建议使用绝对路径；其中测试报告路径应和`build.xml`文件中的路径保持一致；<br>
-> (3)邮件发送配置，请确认SMTP服务配置正确；邮箱登录密码配置，请在`sendEmail.py`文件中第48行设置，如果密码不想让其他人看到，请将该py文件进行编译，或者直接将这个repository打包，具体打包方法，请往下看；<br>
+> (3)如接口自动化脚本维护在git上，可配置git本地仓库路径，每次执行任务前，自动从git上拉取最新版本；前提是已经clone到本地了；<br>
+> (4)邮件发送配置，请确认SMTP服务配置正确；邮箱登录密码配置，请在`sendEmail.py`文件中第48行设置，如果密码不想让其他人看到，请将该py文件进行编译，或者直接将这个repository打包，具体打包方法，请往下看；<br>
 
 5、运行<br>
 > Linux:<br>
@@ -87,5 +90,6 @@ pyinstaller安装自行查找教程，须确保安装正确，否则打包会报
 
 ### Requirements
 1. aiohttp>=3.6.2
-2. requests
-3. Python 3.7+
+2. GitPython>=3.1.2
+3. requests
+4. Python 3.7+

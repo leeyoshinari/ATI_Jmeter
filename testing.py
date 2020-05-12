@@ -5,6 +5,7 @@ import os
 import re
 import time
 from threading import Lock
+from git import Repo
 from sendEmail import sendMsg
 from logger import logger, cfg
 
@@ -19,6 +20,13 @@ class Testing(object):
         :param case_email_path: 列表，第一个元素是测试用例文件路径，第二个元素是收件人的txt文件路径
         :return:
         """
+        if int(cfg.getConfig('is_git')):
+            logger.info('准备从git上拉取最新版本')
+            repo = Repo(cfg.getConfig('git_path'))
+            remote = repo.remote()
+            remote.pull()
+            logger.info('从git上拉取版本成功')
+
         file_name = None
         case_path = case_email_path[0]
         email_path = case_email_path[1]
