@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="ant-jmeter-test" default="run" basedir=".">
     <tstamp>
-        <format property="time" pattern="yyyyMMddhhmm"/>
+        <format property="time" pattern="yyyyMMddhhmmss"/>
     </tstamp>
 	<!-- 测试报告标题名称 -->
     <property name="report.title" value="百度BVT接口自动化测试报告"/>
