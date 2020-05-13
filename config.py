@@ -13,7 +13,7 @@ class Config(object):
         self.cfg.read(config_path, encoding='utf-8')
 
     def getConfig(self, key):
-        return self.cfg.get('default', key)
+        return self.cfg.get('default', key, fallback=None)
 
     def __del__(self):
         pass
