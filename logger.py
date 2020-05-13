@@ -30,8 +30,8 @@ logger.setLevel(level=log_level.get(LEVEL))
 current_day = time.strftime('%Y-%m-%d')
 log_name = os.path.join(log_path, current_day + '.log')
 
-# file_handler = logging.handlers.RotatingFileHandler(filename=log_name, maxBytes=10*1024*1024, backupCount=7)
-file_handler = logging.StreamHandler()
+file_handler = logging.handlers.RotatingFileHandler(filename=log_name, maxBytes=10*1024*1024, backupCount=7)
+# file_handler = logging.StreamHandler()
 
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
