@@ -18,7 +18,7 @@
 4. 通过get请求触发测试任务的执行；
 5. 通过线程池+队列的方式执行测试任务，可灵活设置线程池大小；
 6. 使用aiohttp框架启动后台服务，将测试报告加入到静态资源中，可通过链接访问；
-7. 每次执行测试任务前，自动从git拉取最新版本；
+7. 每次执行测试任务前，自动从git拉取最新版本；如git pull时需要登录，需要提前配置免登录；
 
 生成的测试报告：<br>
 1. Ant生成的测试报告，[长这个样子](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/report/Baidu_AutoTest_Report20200512012447.html) <br>
