@@ -11,9 +11,8 @@ import requests
 
 class Config(object):
     def __init__(self):
-        config_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'config.conf')
         self.cfg = configparser.ConfigParser()
-        self.cfg.read(config_path, encoding='utf-8')
+        self.cfg.read('config.conf', encoding='utf-8')
 
     def getConfig(self, key):
         return self.cfg.get('default', key, fallback=None)
@@ -76,16 +75,19 @@ def put_queue(system_name):
     :param system_name: 系统名
     :return:
     """
-    url = f"http://{cfg.getConfig('IP')}:{cfg.getConfig('PORT')}/run/{system_name}"
-    res = requests.get(url=url)
-    if res.status_code == 200:
-        data = json.loads(res.text)
-        if data['code'] == 1:
-            logger.info(data['message'])
+    try:
+        url = f"http://{cfg.getConfig('IP')}:{cfg.getConfig('PORT')}/run/{system_name}"
+        res = requests.get(url=url)
+        if res.status_code == 200:
+            data = json.loads(res.text)
+            if data['code'] == 1:
+                logger.info(data['message'])
+            else:
+                logger.error(data['message'])
         else:
-            logger.error(data['message'])
-    else:
-        logger.error(f'请求异常-{system_name}')
+            logger.error(f'请求异常-{system_name}，状态码为：{res.status_code}')
+    except Exception as err:
+        logger.error(err)
 
 
 def send_email(name, port):
@@ -95,16 +97,19 @@ def send_email(name, port):
     :param port: 系统端口
     :return:
     """
-    url = f"http://{cfg.getConfig('IP')}:{cfg.getConfig('PORT')}/sendEmail/{name}/{port}"
-    res = requests.get(url=url)
-    if res.status_code == 200:
-        data = json.loads(res.text)
-        if data['code'] == 1:
-            logger.info(data['message'])
+    try:
+        url = f"http://{cfg.getConfig('IP')}:{cfg.getConfig('PORT')}/sendEmail/{name}/{port}"
+        res = requests.get(url=url)
+        if res.status_code == 200:
+            data = json.loads(res.text)
+            if data['code'] == 1:
+                logger.info(data['message'])
+            else:
+                logger.error(data['message'])
         else:
-            logger.error(data['message'])
-    else:
-        logger.error(f'请求异常-{name}')
+            logger.error(f'请求异常-{name}，状态码为：{res.status_code}')
+    except Exception as err:
+        logger.error(err)
 
 
 def main():
@@ -118,6 +123,7 @@ def main():
     name = names.split(',')
 
     if len(port) == len(name):
+        error_times = [0] * len(port)
         PID = [0] * len(port)
         if interval:  # 如果周期性执行
             interval = int(interval)
@@ -132,6 +138,7 @@ def main():
                         else:
                             logger.error(f'{name[i]}环境对应的端口{port[i]}已经停止')
                             send_email(name[i], port[i])
+                            continue
                         start_time[i] = time.time()
 
                     if is_start:
@@ -141,10 +148,13 @@ def main():
                                 PID[i] = pid
                                 put_queue(name[i])
                                 start_time[i] = time.time()  # 重置周期性执行开始时间
+                                error_times[i] = 0
                                 logger.info(f'{name[i]}环境已开始执行')
                         else:
+                            error_times[i] = error_times[i] + 1
                             logger.error(f'{name[i]}环境对应的端口{port[i]}已经停止')
-                            send_email(name[i], port[i])
+                            if error_times[i] == 2:
+                                send_email(name[i], port[i])
 
                 time.sleep(30)
         elif timing:  # 如果定时执行
@@ -172,10 +182,13 @@ def main():
                                 time.sleep(10)
                                 PID[i] = pid
                                 put_queue(name[i])
+                                error_times[i] = 0
                                 logger.info(f'{name[i]}环境已开始执行')
                         else:
+                            error_times[i] = error_times[i] + 1
                             logger.error(f'{name[i]}环境对应的端口{port[i]}已经停止')
-                            send_email(name[i], port[i])
+                            if error_times[i] == 2:
+                                send_email(name[i], port[i])
 
                 time.sleep(30)
 

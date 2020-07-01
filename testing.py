@@ -31,6 +31,7 @@ class Testing(object):
             logger.error(err)
 
         file_name = None
+        error_msg = None
         case_path = case_email_path[0]
         email_path = case_email_path[1]
         build_path = os.path.join(case_path, 'build.xml')
@@ -41,7 +42,8 @@ class Testing(object):
             res = os.popen('ant -f {}'.format(build_path)).readlines()  # 执行测试，并等待测试完成
             for i in range(len(res)):
                 if 'Build failed' in res[i]:    # 如果有失败日志，打印出
-                    logger.error('{}\n{}'.format(res[i-1], res[i]))
+                    error_msg = '{}\n{}'.format(res[i-1], res[i])
+                    logger.error(error_msg)
                     break
                 if 'xslt' in res[i] and 'Processing' in res[i] and 'to' in res[i]:  # 获取测试报告文件名
                     line = res[i].strip()
@@ -53,6 +55,7 @@ class Testing(object):
                     logger.info(file_name)
                     break
         except Exception as err:
+            error_msg = err
             logger.error(err)
 
         if file_name:
@@ -70,7 +73,14 @@ class Testing(object):
             self.lock.release()
             logger.info('测试完成')
         else:
-            logger.error('测试任务执行失败')
+            logger.error(f'测试任务执行失败，失败信息：{error_msg}')
+            html = f'<html><body>' \
+                   f'<h3>异常提醒：{build_path} 测试任务执行失败，失败信息：{error_msg}，请重新执行！</h3>' \
+                   f'<p style="color:blue;">此邮件自动发出，请勿回复。</p></body></html>'
+            try:
+                sendMsg(html, email_path, is_path=False)
+            except Exception as err:
+                logger.error(err)
 
     def parse_html(self, file_name, case_path):
         """
@@ -131,3 +141,4 @@ class Testing(object):
             return {'all_case': all_case, 'fail_case': fail_case, 'total_num': total_num[0], 'failure_num': failure_num[0]}
         except Exception as err:
             logger.error(err)
+            raise Exception(err)

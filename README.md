@@ -53,7 +53,7 @@
 > (1)线程池大小，建议设置1就够了；如确实调度较多测试用例的执行，可酌情增加；<br>
 > (2)测试用例路径和测试报告路径，建议使用绝对路径；其中测试报告路径应和`build.xml`文件中的路径保持一致；<br>
 > (3)如接口自动化脚本维护在git上，可配置git本地仓库路径，每次执行任务前，自动从git上拉取最新版本，默认拉取主分支；前提是已经clone到本地了；<br>
-> (4)邮件发送配置，请确认SMTP服务配置正确；邮箱登录密码配置，请在`sendEmail.py`文件中第48行设置，如果密码不想让其他人看到，请将该py文件进行编译，或者直接将这个repository打包，具体打包方法，请往下看；<br>
+> (4)邮件发送配置，请确认SMTP服务配置正确；邮箱登录密码配置，请在`sendEmail.py`文件中第51行设置，如果密码不想让其他人看到，请将该py文件进行编译，或者直接将这个repository打包，具体打包方法，请往下看；<br>
 
 5、运行<br>
 > Linux:<br>
@@ -66,11 +66,11 @@
 pyinstaller安装自行查找教程，须确保安装正确，否则打包会报错，下面直接进行打包：
 > (1)进入ATI_Jmeter文件夹，执行命令：<br>
 > ```shell
-> pyinstaller server.py -p schedule.py -p logger.py -p config.py -p sendEmail.py -p testing.py --hidden-import logger --hidden-import schedule --hidden-import config --hidden-import sendEmail --hidden-import testing
+> pyinstaller -F server.py -p schedule.py -p logger.py -p config.py -p sendEmail.py -p testing.py --hidden-import logger --hidden-import schedule --hidden-import config --hidden-import sendEmail --hidden-import testing
 > ```
-> (2)打包完成后，在当前路径下会生成dist文件夹，进入dist/server即可找到可执行文件server；<br>
-> (3)将配置文件config.conf拷贝到dist/server文件夹下，并修改配置文件；<br>
-> (4)如需要部署在其他服务器上，可将dist/server整个文件夹拷贝到其他服务器，启动server <br>
+> (2)打包完成后，在当前路径下会生成dist文件夹，进入dist文件夹即可找到可执行文件server；<br>
+> (3)将配置文件config.conf拷贝到dist文件夹下，并修改配置文件；<br>
+> (4)如需要部署在其他服务器上，可将dist整个文件夹拷贝到其他服务器，启动server <br>
 > ```nohup ./server &```
 
 7、CI/CD，以Jenkins为例，在Jenkins构建后操作中增加一个get请求，请求的url为`http://IP:PORT/run/系统名称`，此处系统名称应和testCase用例文件夹中的对应的系统名称保持一致。
