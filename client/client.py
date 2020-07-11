@@ -73,7 +73,7 @@ def put_queue(system_name):
     """
     get请求，触发任务执行，将测试任务放入队列中，如果无测试任务执行，则会立即执行，否则会排队
     :param system_name: 系统名
-    :return:
+    :return: 
     """
     try:
         url = f"http://{cfg.getConfig('IP')}:{cfg.getConfig('PORT')}/run/{system_name}"
