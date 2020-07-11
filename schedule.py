@@ -27,7 +27,7 @@ class Scheduler(object):
     def worker(self):
         """
         从队列中获取测试任务，并开始执行
-        :return:
+        :return: 
         """
         while True:
             func, param = self.test_task.get()
