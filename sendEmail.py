@@ -16,7 +16,7 @@ def sendMsg(html, receiver_email, is_path=True, is_send=True):
     :param receiver_email: 收件人邮箱地址的txt文件路径
     :param is_path: bool，True表示html是一个路径，False表示html是html
     :param is_send: bool，是否发邮件，仅用于第一次发送失败后，再次发送
-    :return:
+    :return: 
     """
     if int(cfg.getConfig('is_email')):
         try:
