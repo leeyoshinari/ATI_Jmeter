@@ -165,14 +165,16 @@ def main():
                 if current_hour - set_hour == 0:
                     current_minute = int(time.strftime('%M'))
                     if current_minute - set_minute == 0:  # 如果满足时、分
-                        for i in range(len(port)):
-                            pid = port_to_pid(port[i])
-                            if pid:
-                                put_queue(name[i])
-                                logger.info(f'{name[i]}环境已开始执行')
-                            else:
-                                logger.error(f'{name[i]}环境对应的端口{port[i]}已经停止')
-                                send_email(name[i], port[i])
+                        week = int(time.strftime('%w'))
+                        if week < 6:    # 工作日运行，非工作日不运行
+                            for i in range(len(port)):
+                                pid = port_to_pid(port[i])
+                                if pid:
+                                    put_queue(name[i])
+                                    logger.info(f'{name[i]}环境已开始执行')
+                                else:
+                                    logger.error(f'{name[i]}环境对应的端口{port[i]}已经停止')
+                                    send_email(name[i], port[i])
 
                 if is_start:
                     for i in range(len(port)):

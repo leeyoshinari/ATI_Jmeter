@@ -75,7 +75,7 @@ class Testing(object):
         else:
             logger.error(f'测试任务执行失败，失败信息：{error_msg}')
             html = f'<html><body>' \
-                   f'<h3>异常提醒：{build_path} 测试任务执行失败，失败信息：{error_msg}，请重新执行！</h3>' \
+                   f'<h3>异常提醒：{build_path} 测试任务执行失败，请重新执行！失败信息：{error_msg}</h3>' \
                    f'<p style="color:blue;">此邮件自动发出，请勿回复。</p></body></html>'
             try:
                 sendMsg(html, email_path, is_path=False)

@@ -10,7 +10,7 @@ from logger import logger, cfg
 class Scheduler(object):
     def __init__(self):
         self.testing = Testing()
-        self.thread_pool_size = int(cfg.getConfig('thread_pool'))
+        self.thread_pool_size = max(1, int(cfg.getConfig('thread_pool')))
         self.test_task = queue.Queue()  # 创建队列
         self.executor = ThreadPoolExecutor(self.thread_pool_size)    # 创建线程池
 

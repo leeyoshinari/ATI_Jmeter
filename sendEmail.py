@@ -57,7 +57,7 @@ def sendMsg(html, receiver_email, is_path=True, is_send=True):
         except Exception as err:
             logger.error(err)
             if is_send:
-                sendMsg(html, receiver_email, is_path=is_path, is_send=False)
+                sendMsg(html, receiver_email, is_path=is_path, is_send=False)   # 发送失败后，重发一次
 
     else:
         logger.info('设置为不自动发送邮件，已跳过。')
