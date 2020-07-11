@@ -67,7 +67,7 @@ async def sendEmail(request):
            f'<p style="color:blue;">此邮件自动发出，请勿回复。</p></body></html>'
     try:
         sendMsg(html, email_file[0], is_path=False)
-        return web.Response(body=json.dumps({'code': 1, 'message': '邮件提醒发送成功', 'data': None}, ensure_ascii=False))
+        return web.Response(body=json.dumps({'code': 1, 'message': '邮件提醒发送成功！', 'data': None}, ensure_ascii=False))
     except Exception as err:
         return web.Response(body=json.dumps({'code': 0, 'message': err, 'data': None}, ensure_ascii=False))
 
