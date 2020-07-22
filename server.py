@@ -56,14 +56,20 @@ async def sendEmail(request):
     """
     name = request.match_info['name']
     port = request.match_info['port']
+    ind = request.match_info['ind']
+    IP = request.match_info['IP']
     email_file = glob.glob(os.path.join(cfg.getConfig('case_path'), name, 'email_*.txt'))
     if len(email_file) == 0:
         return web.Response(body=json.dumps({'code': 0, 'message': '没有设置收件人邮箱地址的txt文件，测试任务执行失败', 'data': None}, ensure_ascii=False))
     elif len(email_file) > 1:
         return web.Response(body=json.dumps({'code': 0, 'message': '应该只有一个收件人邮箱地址的txt文件，但是找到了多个，测试任务执行失败', 'data': None}, ensure_ascii=False))
 
+    if int(ind) == 1:
+        msg = f'{IP} 服务器上的 {port} 端口已经停了，无法执行 {name} 的接口自动化测试，请及时检查端口状态'
+    else:
+        msg = f'{IP} 服务器上的 {name} 接口自动化测试执行异常，请检查测试用例，或手动执行get请求 http://{IP}:{PORT}/run/{name} '
     html = f'<html><body>' \
-           f'<h3>异常提醒：{name}的接口自动化测试环境对应的{port}端口已经停了，请及时重启或更换端口！</h3>' \
+           f'<h3>异常提醒：{msg}！</h3>' \
            f'<p style="color:blue;">此邮件自动发出，请勿回复。</p></body></html>'
     try:
         sendMsg(html, email_file[0], is_path=False)
@@ -77,7 +83,7 @@ async def main():
     app.router.add_static('/testReport/', path=report_path)
 
     app.router.add_route('GET', '/run/{name}', run)
-    app.router.add_route('GET', '/sendEmail/{name}/{port}', sendEmail)
+    app.router.add_route('GET', '/sendEmail/{name}/{port}/{ind}/{IP}', sendEmail)
 
     app_runner = web.AppRunner(app)
     await app_runner.setup()

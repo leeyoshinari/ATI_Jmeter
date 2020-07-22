@@ -40,9 +40,11 @@ class Testing(object):
         try:
             start_time = time.strftime('%Y-%m-%d %H:%M:%S')
             res = os.popen('ant -f {}'.format(build_path)).readlines()  # 执行测试，并等待测试完成
-            for i in range(len(res)):
-                if 'Build failed' in res[i]:    # 如果有失败日志，打印出
-                    error_msg = '{}\n{}'.format(res[i-1], res[i])
+            logger.debug(res)
+            length = len(res)
+            for i in range(length, -1, -1):
+                if 'Failed' in res[i]:    # 如果有失败日志，打印出
+                    error_msg = '{}\n{}'.format(res[i], res[i-1])
                     logger.error(error_msg)
                     break
                 if 'xslt' in res[i] and 'Processing' in res[i] and 'to' in res[i]:  # 获取测试报告文件名
@@ -54,25 +56,27 @@ class Testing(object):
                         file_name = line.split('\\')[-1]
                     logger.info(file_name)
                     break
+
+            del res
+            if file_name:
+                logger.info('测试任务执行完成')
+                time.sleep(2)
+                msg = self.parse_html(file_name, case_path)    # 重组html
+
+                sendMsg(msg['fail_case'], email_path, msg['failure_num'])   # 发送邮件
+
+                string = f"{start_time},{build_path},{msg['total_num']},{msg['failure_num']}\n"
+                self.lock.acquire()
+                logger.info(f'写测试记录到本地, {string}')
+                with open(os.path.join(case_path, cfg.getConfig('record_name')), 'a', encoding='utf-8') as f:
+                    f.write(string)
+                self.lock.release()
+                logger.info('测试完成')
         except Exception as err:
             error_msg = err
             logger.error(err)
 
-        if file_name:
-            logger.info('测试任务执行完成')
-            time.sleep(2)
-            msg = self.parse_html(file_name, case_path)    # 重组html
-
-            sendMsg(msg['fail_case'], email_path)   # 发送邮件
-
-            string = f"{start_time},{build_path},{msg['total_num']},{msg['failure_num']}\n"
-            self.lock.acquire()
-            logger.info(f'写测试记录到本地, {string}')
-            with open(os.path.join(case_path, cfg.getConfig('record_name')), 'a', encoding='utf-8') as f:
-                f.write(string)
-            self.lock.release()
-            logger.info('测试完成')
-        else:
+        if error_msg:
             logger.error(f'测试任务执行失败，失败信息：{error_msg}')
             html = f'<html><body>' \
                    f'<h3>异常提醒：{build_path} 测试任务执行失败，请重新执行！ 失败信息：{error_msg}</h3>' \
@@ -138,6 +142,7 @@ class Testing(object):
                 f.writelines(res)
 
             logger.info('html测试报告处理完成')
+            del htmls, html, res, res1, history
             return {'all_case': all_case, 'fail_case': fail_case, 'total_num': total_num[0], 'failure_num': failure_num[0]}
         except Exception as err:
             logger.error(err)

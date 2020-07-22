@@ -9,16 +9,35 @@ from email.header import Header
 from logger import logger, cfg
 
 
-def sendMsg(html, receiver_email, is_path=True, is_send=True):
+def sendMsg(html, receiver_email, failure_num, is_path=True, is_send=True):
     """
     发送邮件
     :param html: 邮件正文用到的html文件路径，或者html
     :param receiver_email: 收件人邮箱地址的txt文件路径
+    :param failure_num: 失败的用例数
     :param is_path: bool，True表示html是一个路径，False表示html是html
     :param is_send: bool，是否发邮件，仅用于第一次发送失败后，再次发送
     :return: 
     """
-    if int(cfg.getConfig('is_email')):
+    flag = 0
+    is_email = int(cfg.getConfig('is_email'))
+    if is_email:
+        if is_email == 1:
+            flag = 1
+        if is_email == 2:
+            if failure_num > 0:
+                flag = 1
+            else:
+                logger.info('所有用例执行成功，不发送邮件，已跳过。')
+        if is_email == 3:
+            if failure_num == 0:
+                flag = 1
+            else:
+                logger.info('有执行失败的用例，不发送邮件，已跳过。')
+    else:
+        logger.info('设置为不自动发送邮件，已跳过。')
+
+    if flag:
         try:
             receive_name = re.findall('email_(.*?).txt', receiver_email)[0]     # 提取收件人姓名
             with open(receiver_email, 'r', encoding='utf-8') as f:
@@ -51,13 +70,9 @@ def sendMsg(html, receiver_email, is_path=True, is_send=True):
             server.login(cfg.getConfig('sender_email'), '123456')  # 登陆邮箱
             server.sendmail(cfg.getConfig('sender_email'), send_to.split(','), message.as_string())  # 发送邮件
             server.quit()
-            del email_text
-            del message
+            del fail_case, email_text, message, server
             logger.info('邮件发送成功')
         except Exception as err:
             logger.error(err)
             if is_send:
                 sendMsg(html, receiver_email, is_path=is_path, is_send=False)   # 发送失败后，重发一次
-
-    else:
-        logger.info('设置为不自动发送邮件，已跳过。')

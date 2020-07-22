@@ -47,6 +47,21 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
+def get_ip():
+    """
+    获取当前服务器IP地址
+    :return: IP
+    """
+    IP = '127.0.0.1'
+    try:
+        result = os.popen('ifconfig').readlines()
+        logger.debug(result)
+    except Exception as err:
+        logger.error(err)
+
+    return IP
+
+
 def port_to_pid(port):
     """
     根据端口号查询进程号
@@ -84,21 +99,25 @@ def put_queue(system_name):
                 logger.info(data['message'])
             else:
                 logger.error(data['message'])
+                send_email(system_name, '12020', ind=2)
         else:
             logger.error(f'请求异常-{system_name}，状态码为：{res.status_code}')
+            send_email(system_name, '12020', ind=2)
     except Exception as err:
         logger.error(err)
 
 
-def send_email(name, port):
+def send_email(name, port, ind=1):
     """
     端口停止，发送邮件提醒
     :param name: 系统名
     :param port: 系统端口
+    :param ind: 标志，错误类型
     :return:
     """
+    IP = get_ip()
     try:
-        url = f"http://{cfg.getConfig('IP')}:{cfg.getConfig('PORT')}/sendEmail/{name}/{port}"
+        url = f"http://{cfg.getConfig('IP')}:{cfg.getConfig('PORT')}/sendEmail/{name}/{port}/{ind}/{IP}"
         res = requests.get(url=url)
         if res.status_code == 200:
             data = json.loads(res.text)
