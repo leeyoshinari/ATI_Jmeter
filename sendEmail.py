@@ -9,7 +9,7 @@ from email.header import Header
 from logger import logger, cfg
 
 
-def sendMsg(html, receiver_email, failure_num, is_path=True, is_send=True):
+def sendMsg(html, receiver_email, failure_num=1, is_path=True, is_send=True):
     """
     发送邮件
     :param html: 邮件正文用到的html文件路径，或者html

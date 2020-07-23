@@ -54,8 +54,12 @@ def get_ip():
     """
     IP = '127.0.0.1'
     try:
-        result = os.popen('ifconfig').readlines()
+        result = os.popen("hostname -I |awk '{print $1}'").readlines()
         logger.debug(result)
+        if result:
+            IP = result[0].strip()
+        else:
+            logger.warning('未获取到服务器IP地址')
     except Exception as err:
         logger.error(err)
 
@@ -68,7 +72,7 @@ def port_to_pid(port):
     :param port: 端口号
     :return: 进程号
     """
-    pid = None
+    pid = '0'
     try:
         result = os.popen(f'netstat -nlp|grep {port} |tr -s " "').readlines()
         flag = f':{port}'
@@ -152,8 +156,8 @@ def main():
                     pid = port_to_pid(port[i])
                     if time.time() - start_time[i] > interval:  # 如果满足时间间隔
                         if pid:
-                            put_queue(name[i])
                             logger.info(f'{name[i]}环境已开始执行')
+                            put_queue(name[i])
                         else:
                             logger.error(f'{name[i]}环境对应的端口{port[i]}已经停止')
                             send_email(name[i], port[i])
@@ -165,17 +169,17 @@ def main():
                             if pid != PID[i]:  # 如果服务重启，则立即执行
                                 time.sleep(10)
                                 PID[i] = pid
+                                logger.info(f'{name[i]}环境已开始执行')
                                 put_queue(name[i])
                                 start_time[i] = time.time()  # 重置周期性执行开始时间
                                 error_times[i] = 0
-                                logger.info(f'{name[i]}环境已开始执行')
                         else:
                             error_times[i] = error_times[i] + 1
                             logger.error(f'{name[i]}环境对应的端口{port[i]}已经停止')
                             if error_times[i] == 2:
                                 send_email(name[i], port[i])
 
-                time.sleep(30)
+                time.sleep(29)
         elif timing:  # 如果定时执行
             set_hour = int(timing.split(':')[0])
             set_minute = int(timing.split(':')[1])
@@ -189,8 +193,8 @@ def main():
                             for i in range(len(port)):
                                 pid = port_to_pid(port[i])
                                 if pid:
-                                    put_queue(name[i])
                                     logger.info(f'{name[i]}环境已开始执行')
+                                    put_queue(name[i])
                                 else:
                                     logger.error(f'{name[i]}环境对应的端口{port[i]}已经停止')
                                     send_email(name[i], port[i])
@@ -202,23 +206,23 @@ def main():
                             if pid != PID[i]:  # 如果服务重启，则立即执行
                                 time.sleep(10)
                                 PID[i] = pid
+                                logger.info(f'{name[i]}环境已开始执行')
                                 put_queue(name[i])
                                 error_times[i] = 0
-                                logger.info(f'{name[i]}环境已开始执行')
                         else:
                             error_times[i] = error_times[i] + 1
                             logger.error(f'{name[i]}环境对应的端口{port[i]}已经停止')
                             if error_times[i] == 2:
                                 send_email(name[i], port[i])
 
-                time.sleep(30)
+                time.sleep(29)
 
         else:
             for i in range(len(port)):
                 pid = port_to_pid(port[i])
                 if pid:
-                    put_queue(name[i])
                     logger.info(f'{name[i]}环境已开始执行')
+                    put_queue(name[i])
                 else:
                     logger.error(f'{name[i]}环境对应的端口{port[i]}已经停止')
                     send_email(name[i], port[i])

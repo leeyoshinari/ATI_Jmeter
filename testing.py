@@ -63,7 +63,7 @@ class Testing(object):
                 time.sleep(2)
                 msg = self.parse_html(file_name, case_path)    # 重组html
 
-                sendMsg(msg['fail_case'], email_path, msg['failure_num'])   # 发送邮件
+                sendMsg(msg['fail_case'], email_path, failure_num=msg['failure_num'])   # 发送邮件
 
                 string = f"{start_time},{build_path},{msg['total_num']},{msg['failure_num']}\n"
                 self.lock.acquire()
@@ -72,6 +72,8 @@ class Testing(object):
                     f.write(string)
                 self.lock.release()
                 logger.info('测试完成')
+            else:
+                error_msg = 'html格式的测试报告未找到'
         except Exception as err:
             error_msg = err
             logger.error(err)
