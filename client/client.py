@@ -4,6 +4,7 @@
 import os
 import time
 import json
+import traceback
 import configparser
 import logging.handlers
 import requests
@@ -40,77 +41,100 @@ current_day = time.strftime('%Y-%m-%d')
 log_name = os.path.join(log_path, current_day + '.log')
 
 # 日志输出到文件中
-file_handler = logging.handlers.RotatingFileHandler(filename=log_name, maxBytes=10*1024*1024, backupCount=7)
+file_handler = logging.handlers.RotatingFileHandler(filename=log_name, maxBytes=10 * 1024 * 1024, backupCount=7)
 # 日志输出到控制台
 # file_handler = logging.StreamHandler()
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
+def handle_exception(errors=(Exception,), is_return=False, default_value=None):
+    """
+    Handle exception, throw an exception, or return a value.
+    :param errors: Exception type
+    :param is_return: Whether to return 'default_value'. Default False, if exception, don't throw an exception, but return a value.
+    :param default_value: If 'is_return' is True, return 'default_value'.
+    :return: 'default_value'
+    """
+    def decorator(func):
+        def decorator1(*args, **kwargs):
+            if is_return:
+                try:
+                    return func(*args, **kwargs)
+                except errors:
+                    logger.error(traceback.format_exc())
+                    return default_value
+            else:
+                try:
+                    return func(*args, **kwargs)
+                except errors:
+                    raise
+
+        return decorator1
+
+    return decorator
+
+
+@handle_exception(is_return=True, default_value='127.0.0.1')
 def get_ip():
     """
     获取当前服务器IP地址
     :return: IP
     """
-    IP = '127.0.0.1'
-    try:
-        result = os.popen("hostname -I |awk '{print $1}'").readlines()
-        logger.debug(result)
-        if result:
-            IP = result[0].strip()
-        else:
-            logger.warning('未获取到服务器IP地址')
-    except Exception as err:
-        logger.error(err)
+    result = os.popen("hostname -I |awk '{print $1}'").readlines()
+    logger.debug(result)
+    if result:
+        IP = result[0].strip()
+    else:
+        logger.warning('未获取到服务器IP地址')
+        IP = '127.0.0.1'
 
     return IP
 
 
+@handle_exception(is_return=True, default_value='')
 def port_to_pid(port):
     """
     根据端口号查询进程号
     :param port: 端口号
     :return: 进程号
     """
-    pid = '0'
-    try:
-        result = os.popen(f'netstat -nlp|grep {port} |tr -s " "').readlines()
-        flag = f':{port}'
-        res = [line.strip() for line in result if flag in line]
-        logger.debug(res[0])
-        p = res[0].split(' ')
-        pp = p[3].split(':')[-1]
-        if str(port) == pp:
-            pid = p[p.index('LISTEN') + 1].split('/')[0]
-    except Exception as err:
-        logger.error(err)
+    result = os.popen(f'netstat -nlp|grep {port} |tr -s " "').readlines()
+    flag = f':{port}'
+    res = [line.strip() for line in result if flag in line]
+    logger.debug(res[0])
+    p = res[0].split(' ')
+    pp = p[3].split(':')[-1]
+    if str(port) == pp:
+        pid = p[p.index('LISTEN') + 1].split('/')[0]
+    else:
+        pid = ''
 
     return pid
 
 
+@handle_exception(is_return=True)
 def put_queue(system_name):
     """
     get请求，触发任务执行，将测试任务放入队列中，如果无测试任务执行，则会立即执行，否则会排队
     :param system_name: 系统名
     :return: 
     """
-    try:
-        url = f"http://{cfg.getConfig('IP')}:{cfg.getConfig('PORT')}/run/{system_name}"
-        res = requests.get(url=url)
-        if res.status_code == 200:
-            data = json.loads(res.text)
-            if data['code'] == 1:
-                logger.info(data['message'])
-            else:
-                logger.error(data['message'])
-                send_email(system_name, '12020', ind=2)
+    url = f"http://{cfg.getConfig('IP')}:{cfg.getConfig('PORT')}/run/{system_name}"
+    res = requests.get(url=url)
+    if res.status_code == 200:
+        data = json.loads(res.text)
+        if data['code'] == 1:
+            logger.info(data['message'])
         else:
-            logger.error(f'请求异常-{system_name}，状态码为：{res.status_code}')
+            logger.error(data['message'])
             send_email(system_name, '12020', ind=2)
-    except Exception as err:
-        logger.error(err)
+    else:
+        logger.error(f'请求异常-{system_name}，状态码为：{res.status_code}')
+        send_email(system_name, '12020', ind=2)
 
 
+@handle_exception(is_return=True)
 def send_email(name, port, ind=1):
     """
     端口停止，发送邮件提醒
@@ -120,19 +144,16 @@ def send_email(name, port, ind=1):
     :return:
     """
     IP = get_ip()
-    try:
-        url = f"http://{cfg.getConfig('IP')}:{cfg.getConfig('PORT')}/sendEmail/{name}/{port}/{ind}/{IP}"
-        res = requests.get(url=url)
-        if res.status_code == 200:
-            data = json.loads(res.text)
-            if data['code'] == 1:
-                logger.info(data['message'])
-            else:
-                logger.error(data['message'])
+    url = f"http://{cfg.getConfig('IP')}:{cfg.getConfig('PORT')}/sendEmail/{name}/{port}/{ind}/{IP}"
+    res = requests.get(url=url)
+    if res.status_code == 200:
+        data = json.loads(res.text)
+        if data['code'] == 1:
+            logger.info(data['message'])
         else:
-            logger.error(f'请求异常-{name}，状态码为：{res.status_code}')
-    except Exception as err:
-        logger.error(err)
+            logger.error(data['message'])
+    else:
+        logger.error(f'请求异常-{name}，状态码为：{res.status_code}')
 
 
 def main():
@@ -150,7 +171,7 @@ def main():
         PID = [0] * len(port)
         if interval:  # 如果周期性执行
             interval = int(interval)
-            start_time = [time.time()] * len(port)      # 初始化开始时间
+            start_time = [time.time()] * len(port)  # 初始化开始时间
             while True:
                 for i in range(len(port)):
                     pid = port_to_pid(port[i])
@@ -189,7 +210,7 @@ def main():
                     current_minute = int(time.strftime('%M'))
                     if current_minute - set_minute == 0:  # 如果满足时、分
                         week = int(time.strftime('%w'))
-                        if week < 6:    # 工作日运行，非工作日不运行
+                        if week < 6:  # 工作日运行，非工作日不运行
                             for i in range(len(port)):
                                 pid = port_to_pid(port[i])
                                 if pid:
