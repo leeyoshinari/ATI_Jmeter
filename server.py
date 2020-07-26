@@ -17,6 +17,19 @@ IP = cfg.getConfig('host')
 PORT = cfg.getConfig('port')
 
 
+async def get_list(request):
+    """
+    获取当前测试用例目录下的系统名，及执行测试任务需要的get请求的url
+    """
+    case_path = cfg.getConfig('case_path')
+    max_num = 0
+    for i in os.listdir(case_path):
+        if max_num < len(i):
+            max_num = len(i)
+    dirs = [d+' '*(max_num-len(d))+'\t\t'+'http://'+IP+':'+PORT+'/run/'+d for d in os.listdir(case_path) if os.path.isdir(os.path.join(case_path, d))]
+    return web.Response(body='\n'.join(dirs))
+
+
 async def run(request):
     """
     run接口，get请求，把测试任务放入队列中
@@ -82,6 +95,7 @@ async def main():
     app = web.Application()
     app.router.add_static('/testReport/', path=report_path)
 
+    app.router.add_route('GET', '/', get_list)
     app.router.add_route('GET', '/run/{name}', run)
     app.router.add_route('GET', '/sendEmail/{name}/{port}/{ind}/{IP}', sendEmail)
 
