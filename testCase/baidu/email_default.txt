@@ -1,0 +1,5 @@
+{
+"subject": "百度接口自动化测试报告",
+"receiveName": "baidu_all",
+"receiveEmail": "aaa@baidu.com,bbb@baidu.com"
+}

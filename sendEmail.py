@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 # Author: leeyoshinari
 import re
+import json
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -39,11 +40,10 @@ def sendMsg(html, receiver_email, failure_num=1, is_path=True, is_send=True):
 
     if flag:
         try:
-            receive_name = re.findall('email_(.*?).txt', receiver_email)[0]     # 提取收件人姓名
-            with open(receiver_email, 'r', encoding='utf-8') as f:
-                sends = f.readlines()
-            subject = sends[0]
-            send_to = sends[1]
+            email_dict = json.load(open(receiver_email, 'r', encoding='utf-8'))
+            subject = email_dict['subject']
+            send_to = email_dict['receiveEmail']
+            receive_name = email_dict['receiveName']
             logger.info('开始发送邮件，收件人{}'.format(send_to))
             message = MIMEMultipart()
             message['From'] = Header(cfg.getConfig('sender_name'))      # 发件人名字

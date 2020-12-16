@@ -1,2 +1,0 @@
-百度接口自动化测试报告
-aaa@baidu.com,bbb@baidu.com

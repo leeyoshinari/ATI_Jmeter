@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 # Author: leeyoshinari
+import os
+import json
 import queue
 from concurrent.futures import ThreadPoolExecutor
 from testing import Testing
@@ -41,3 +43,29 @@ class Scheduler(object):
         """
         for i in range(self.thread_pool_size):
             self.executor.submit(self.worker)
+
+
+def replace_email(src, new_dict, dst):
+    old_dict = json.load(open(src, 'r', encoding='utf-8'))
+    for k, v in new_dict.items():
+        old_dict.update({k: v})
+
+    with open(dst, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(old_dict))
+
+
+def replace_config(src, new_dict, dst):
+    old_dict = {}
+    with open(src, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    for line in lines:
+        k_v = line.split('//')[0].split('=')
+        old_dict.update({k_v[0].strip(): k_v[1].strip()})
+
+    for k, v in new_dict.items():
+        old_dict.update({k: v})
+
+    lines = [f'{k}={v}\n' for k, v in old_dict.items()]
+    with open(dst, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
