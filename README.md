@@ -75,7 +75,7 @@ pyinstaller安装自行查找教程，须确保安装正确，否则打包会报
 > (4)如需要部署在其他服务器上，可将dist整个文件夹拷贝到其他服务器，启动server <br>
 > ```nohup ./server &```
 
-7、CI/CD，以Jenkins为例，在Jenkins构建后操作中增加一个get请求，请求的url为`http://IP:PORT/run/系统名称`，此处系统名称应和testCase用例文件夹中的对应的系统名称保持一致。
+7、CI/CD，以Jenkins为例，在Jenkins构建后操作中增加一个get请求，请求的url为`http://IP:PORT/run?systemName=系统名称`，此处系统名称应和testCase用例文件夹中的对应的系统名称保持一致。
 
 8、如果你所在的项目还没有用到CI/CD，或者项目本身有较多配置项，每次手动更改配置重启项目后，也想自动执行测试任务；亦或是你不想配置CI/CD，则需要执行客户端；<br>
 进入client文件夹，将脚本和配置文件拷贝到项目所在的服务器上，运行即可，也可以按照步骤6的方式进行打包。<br>
