@@ -46,9 +46,10 @@ async def run(request):
         config_file = os.path.join(case_path, 'config_default.txt')     # jmx执行的配置文件对应的默认配置文件
         new_email_file = os.path.join(case_path, 'email.txt')  # 邮件配置文件
         new_config_file = os.path.join(case_path, 'config.txt')  # jmx执行的配置文件
-        shutil.copy(email_file, new_email_file)     # 复制，用于发送邮件
-        shutil.copy(config_file, new_config_file)   # 复制，用于jmx执行
         if os.path.exists(case_path):
+            shutil.copy(email_file, new_email_file)     # 复制，用于发送邮件
+            shutil.copy(config_file, new_config_file)   # 复制，用于jmx执行
+
             if not os.path.exists(record_path):
                 f = open(record_path, 'a')
                 f.close()
@@ -62,8 +63,8 @@ async def run(request):
             return web.Response(body=json.dumps({
                 'code': 0, 'message': '未找到与系统名称对应的脚本，请确认系统名称是否正确，脚本是否存在！', 'data': None}, ensure_ascii=False))
     else:
-        post_data = request.json()
-        system_name = post_data['systemName']   # 待执行测试的系统根路径
+        post_data = await request.json()
+        system_name = request.query.get('systemName')   # 待执行测试的系统根路径
         case_path = os.path.join(cfg.getConfig('case_path'), system_name)  # 测试用例路径
         record_path = os.path.join(case_path, cfg.getConfig('record_name'))  # 测试结果记录路径
         build_file = os.path.join(cfg.getConfig('case_path'), system_name, 'build.xml')  # build.xml路径

@@ -47,9 +47,9 @@
 > ![文件夹结构](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/res/file_structure.png)
 
 强烈建议文件夹及文件名称使用英文<br>
-为什么要按照上面的要求放置测试用例？这样放置方便执行测试任务，通过get或post请求`http://ip:port/run/baidu`就可以执行百度的测试用例。<br>
+为什么要按照上面的要求放置测试用例？这样放置方便执行测试任务，通过get或post请求`http://ip:port/run?systemName=baidu`就可以执行百度的测试用例。<br>
 get请求，jmeter参数和邮件信息为默认值，post请求传的参数可以覆盖默认值。<br>
-post请求传参示例：`{"params": {"ip": "127.0.0.1", "port": "9998"}, "email": {"subject": "腾讯接口自动化测试报告", "receiveName": "tencent_all"}}`
+post请求传参示例：`{"params": {"ip": "127.0.0.1", "port": "9998"}, "email": {"subject": "腾讯接口自动化测试报告", "receiveName": "tencent_all", "receiveEmail": "aaa@baidu.com"}}`
 
 4、修改配置文件config.conf<br>
 > (1)线程池大小，建议设置1就够了；如确实调度较多测试用例的执行，可酌情增加；<br>

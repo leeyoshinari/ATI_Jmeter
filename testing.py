@@ -42,7 +42,7 @@ class Testing(object):
             res = os.popen('ant -f {}'.format(build_path)).readlines()  # 执行测试，并等待测试完成
             logger.debug(res)
             length = len(res)
-            for i in range(length, -1, -1):
+            for i in range(length-1, -1, -1):
                 if 'Failed' in res[i]:    # 如果有失败日志，打印出
                     error_msg = '{}\n{}'.format(res[i], res[i-1])
                     logger.error(error_msg)
