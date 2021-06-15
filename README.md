@@ -2,6 +2,9 @@
 ### 介绍
 本项目是一整套使用Jmeter+Ant+Python完成接口自动化测试的解决方案；特别是多系统的测试任务执行，要比网上的教程方便的多。<br>
 
+整体架构图：<br>
+![](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/res/structure.jpg)
+
 功能：<br>
 1. 使用Jmeter维护接口测试用例；
 2. 使用Ant执行测试任务，并生成测试报告；
