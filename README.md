@@ -16,13 +16,15 @@
 2. 考虑到邮件正文内容可读性，定制化修改测试报告模板；
 3. 使用正则表达式提取测试报告中的信息，重新组合成邮件正文；
 4. 通过get请求触发测试任务的执行；
-5. 通过线程池+队列的方式执行测试任务，可灵活设置线程池大小；
+5. 通过多线程和队列的方式执行测试任务；
 6. 使用aiohttp框架启动后台服务，将测试报告加入到静态资源中，可通过链接访问；
 7. 每次执行测试任务前，自动从git拉取最新版本；如git pull时需要登录，需要提前配置免登录；
 
 生成的测试报告：<br>
-1. Ant生成的测试报告，[长这个样子](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/report/Baidu_AutoTest_Report20200512012447.html) <br>
-2. 邮件收到的测试报告，[长这个样子](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/report/send_Baidu_AutoTest_Report20200512012447.html) <br>
+1. Ant生成的测试报告，长这个样子
+![长这个样子](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/res/email.jpg)
+2. 邮件收到的测试报告，长这个样子
+![长这个样子](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/res/send_email.jpg)
 
 ### 部署
 1、Jmeter和Ant部署参考网上教程，主要介绍测试报告模板修改和build.xml文件<br>
@@ -34,7 +36,7 @@
 >> (5) 其他未标注出来的修改点，主要是默认模板没有我想看到的数据，把一些没有展示的数据展示出来，把一些“没用的”数据隐藏起来，以及一些样式的修改；<br>
 
 > build.xml文件如下，具体配置已详细说明。强调：为了方便测试报告统一管理，也为了能够自动发送邮件，所有系统的build.xml中的测试报告路径必须是同一个文件夹<br>
-    ![build文件](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/res/build.png)
+    ![build文件](https://github.com/leeyoshinari/ATI_Jmeter/blob/master/res/build.jpg)
 
 2、克隆repository<br>
     ```git clone https://github.com/leeyoshinari/ATI_Jmeter.git``` <br>

@@ -4,10 +4,9 @@
 import os
 import glob
 import json
-import shutil
 import asyncio
 from aiohttp import web
-from schedule import Scheduler, replace_email, replace_config
+from schedule import Scheduler
 from sendEmail import sendMsg
 from logger import logger, cfg
 
@@ -16,6 +15,8 @@ schedule = Scheduler()
 report_path = cfg.getConfig('report_path')
 IP = cfg.getConfig('host')
 PORT = cfg.getConfig('port')
+if not os.path.exists(report_path):
+    os.mkdir(report_path)
 
 
 async def get_list(request):
@@ -38,61 +39,62 @@ async def run(request):
     :return:
     """
     if request.method == 'GET':
-        system_name = request.query.get('systemName')     # 待执行测试的系统根路径
-        case_path = os.path.join(cfg.getConfig('case_path'), system_name)   # 测试用例路径
-        record_path = os.path.join(case_path, cfg.getConfig('record_name'))     # 测试结果记录路径
-        build_file = os.path.join(cfg.getConfig('case_path'), system_name, 'build.xml')     # build.xml路径
-        email_file = os.path.join(case_path, 'email_default.txt')   # 邮件默认配置文件
-        config_file = os.path.join(case_path, 'config_default.txt')     # jmx执行的配置文件对应的默认配置文件
-        new_email_file = os.path.join(case_path, 'email.txt')  # 邮件配置文件
-        new_config_file = os.path.join(case_path, 'config.txt')  # jmx执行的配置文件
+        paths = {"method": "GET"}
+        system_name = request.query.get('systemName')  # 待执行测试的系统根路径
+        case_path = os.path.join(cfg.getConfig('case_path'), system_name)  # 测试用例路径
+        paths.update({"system_name": system_name})
+        paths.update({"case_path": case_path})  # 测试用例路径
+        paths.update({"record_path": os.path.join(case_path, cfg.getConfig('record_name'))})  # 测试结果记录路径
+        paths.update({"build_file": os.path.join(cfg.getConfig('case_path'), system_name, 'build.xml')})  # build.xml路径
+        paths.update({"email_file": os.path.join(case_path, 'email_default.txt')})  # 邮件默认配置文件
+        paths.update({"config_file": os.path.join(case_path, 'config_default.txt')})  # jmx执行的配置文件对应的默认配置文件
+        paths.update({"new_email_file": os.path.join(case_path, 'email.txt')})  # 邮件配置文件
+        paths.update({"new_config_file": os.path.join(case_path, 'config.txt')})  # jmx执行的配置文件
         if os.path.exists(case_path):
-            shutil.copy(email_file, new_email_file)     # 复制，用于发送邮件
-            shutil.copy(config_file, new_config_file)   # 复制，用于jmx执行
-
-            if not os.path.exists(record_path):
-                f = open(record_path, 'a')
+            if not os.path.exists(paths["record_path"]):
+                f = open(paths["record_path"], 'a')
                 f.close()
 
-            if os.path.exists(build_file):
-                schedule.task = [case_path, new_email_file]
-                return web.Response(body=json.dumps({'code': 1, 'message': '操作成功，测试任务正在准备执行', 'data': None}, ensure_ascii=False))
+            if os.path.exists(paths["build_file"]):
+                schedule.task = paths
+                return web.Response(
+                    body=json.dumps({'code': 1, 'message': '操作成功，测试任务正在准备执行', 'data': None}, ensure_ascii=False))
             else:
-                return web.Response(body=json.dumps({'code': 0, 'message': 'build.xml文件不存在，测试任务执行失败', 'data': None}, ensure_ascii=False))
+                return web.Response(body=json.dumps({'code': 0, 'message': 'build.xml文件不存在，测试任务执行失败', 'data': None},
+                                                    ensure_ascii=False))
         else:
             return web.Response(body=json.dumps({
                 'code': 0, 'message': '未找到与系统名称对应的脚本，请确认系统名称是否正确，脚本是否存在！', 'data': None}, ensure_ascii=False))
     else:
         post_data = await request.json()
-        system_name = request.query.get('systemName')   # 待执行测试的系统根路径
+        paths = {"method": "POST"}
+        system_name = request.query.get('systemName')  # 待执行测试的系统根路径
         case_path = os.path.join(cfg.getConfig('case_path'), system_name)  # 测试用例路径
-        record_path = os.path.join(case_path, cfg.getConfig('record_name'))  # 测试结果记录路径
-        build_file = os.path.join(cfg.getConfig('case_path'), system_name, 'build.xml')  # build.xml路径
-        email_file = os.path.join(case_path, 'email_default.txt')  # 邮件默认配置文件
-        config_file = os.path.join(case_path, 'config_default.txt')  # jmx执行的配置文件对应的默认配置文件
-        new_email_file = os.path.join(case_path, 'email.txt')  # 邮件配置文件
-        new_config_file = os.path.join(case_path, 'config.txt')  # jmx执行的配置文件
+        paths.update({"system_name": system_name})
+        paths.update({"case_path": case_path})  # 测试用例路径
+        paths.update({"record_path": os.path.join(case_path, cfg.getConfig('record_name'))})  # 测试结果记录路径
+        paths.update({"build_file": os.path.join(cfg.getConfig('case_path'), system_name, 'build.xml')})  # build.xml路径
+        paths.update({"email_file": os.path.join(case_path, 'email_default.txt')})  # 邮件默认配置文件
+        paths.update({"config_file": os.path.join(case_path, 'config_default.txt')})  # jmx执行的配置文件对应的默认配置文件
+        paths.update({"new_email_file": os.path.join(case_path, 'email.txt')})  # 邮件配置文件
+        paths.update({"new_config_file": os.path.join(case_path, 'config.txt')})  # jmx执行的配置文件
+        paths.update({"post_data": post_data})
 
         if os.path.exists(case_path):
-            if not os.path.exists(record_path):
-                f = open(record_path, 'a')
+            if not os.path.exists(paths["record_path"]):
+                f = open(paths["record_path"], 'a')
                 f.close()
 
-            if post_data.get('email'):
-                replace_email(email_file, post_data['email'], new_email_file)
-
-            if post_data.get('params'):
-                replace_config(config_file, post_data['params'], new_config_file)
-
-            if os.path.exists(build_file):
-                schedule.task = [case_path, new_email_file]
-                return web.Response(body=json.dumps({'code': 1, 'message': '操作成功，测试任务正在准备执行', 'data': None}, ensure_ascii=False))
+            if os.path.exists(paths["build_file"]):
+                schedule.task = paths
+                return web.Response(
+                    body=json.dumps({'code': 1, 'message': '操作成功，测试任务正在准备执行', 'data': None}, ensure_ascii=False))
             else:
-                return web.Response(body=json.dumps({'code': 0, 'message': 'build.xml文件不存在，测试任务执行失败', 'data': None}, ensure_ascii=False))
+                return web.Response(body=json.dumps({'code': 0, 'message': 'build.xml文件不存在，测试任务执行失败', 'data': None},
+                                                    ensure_ascii=False))
         else:
             return web.Response(body=json.dumps({
                 'code': 0, 'message': '未找到与系统名称对应的脚本，请确认系统名称是否正确，脚本是否存在！', 'data': None}, ensure_ascii=False))
-
 
 async def sendEmail(request):
     """
@@ -130,7 +132,7 @@ async def main():
 
     app.router.add_route('GET', '/', get_list)
     app.router.add_route('*', '/run', run)
-    app.router.add_route('GET', '/sendEmail/{name}/{port}/{ind}/{IP}', sendEmail)
+    # app.router.add_route('GET', '/sendEmail/{name}/{port}/{ind}/{IP}', sendEmail)
 
     app_runner = web.AppRunner(app)
     await app_runner.setup()

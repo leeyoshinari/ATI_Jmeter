@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 # Author: leeyoshinari
-import re
 import json
 import smtplib
+import shutil
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
 from logger import logger, cfg
 
 
-def sendMsg(html, receiver_email, failure_num=1, is_path=True, is_send=True):
+def sendMsg(html, paths, failure_num=1, is_path=True, is_send=True):
     """
     发送邮件
     :param html: 邮件正文用到的html文件路径，或者html
-    :param receiver_email: 收件人邮箱地址的txt文件路径
+    :param paths:
     :param failure_num: 失败的用例数
     :param is_path: bool，True表示html是一个路径，False表示html是html
     :param is_send: bool，是否发邮件，仅用于第一次发送失败后，再次发送
@@ -40,7 +40,13 @@ def sendMsg(html, receiver_email, failure_num=1, is_path=True, is_send=True):
 
     if flag:
         try:
-            email_dict = json.load(open(receiver_email, 'r', encoding='utf-8'))
+            if paths["method"] == "GET":
+                shutil.copy(paths["email_file"], paths["new_email_file"])
+            else:
+                if paths["post_data"].get('email'):
+                    replace_email(paths["email_file"], paths["post_data"]['email'], paths["new_email_file"])
+
+            email_dict = json.load(open(paths["new_email_file"], 'r', encoding='utf-8'))
             subject = email_dict['subject']
             send_to = email_dict['receiveEmail']
             receive_name = email_dict['receiveName']
@@ -61,11 +67,9 @@ def sendMsg(html, receiver_email, failure_num=1, is_path=True, is_send=True):
 
             try:
                 server = smtplib.SMTP_SSL(cfg.getConfig('smtp'), 465)
-                # server.connect(cfg.getConfig('smtp'))
             except Exception as err:
                 logger.error(err)
                 server = smtplib.SMTP(cfg.getConfig('smtp'), 25)
-                # server.connect(cfg.getConfig('smtp'))
 
             server.login(cfg.getConfig('sender_email'), '123456')  # 登陆邮箱
             server.sendmail(cfg.getConfig('sender_email'), send_to.split(','), message.as_string())  # 发送邮件
@@ -75,4 +79,13 @@ def sendMsg(html, receiver_email, failure_num=1, is_path=True, is_send=True):
         except Exception as err:
             logger.error(err)
             if is_send:
-                sendMsg(html, receiver_email, is_path=is_path, is_send=False)   # 发送失败后，重发一次
+                sendMsg(html, paths, is_path=is_path, is_send=False)   # 发送失败后，重发一次
+
+
+def replace_email(src, new_dict, dst):
+    old_dict = json.load(open(src, 'r', encoding='utf-8'))
+    for k, v in new_dict.items():
+        old_dict.update({k: v})
+
+    with open(dst, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(old_dict))

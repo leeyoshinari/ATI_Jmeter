@@ -8,14 +8,14 @@
     <!-- 需要改成自己本地的 Jmeter 目录-->
     <property name="jmeter.home" value="D:/apache-jmeter-5.2.1"/>
     <!-- jmeter生成jtl格式的结果报告的路径-->
-    <property name="jmeter.result.jtl.dir" value="../../report"/>
+    <property name="jmeter.result.jtl.dir" value="../../reports"/>
     <!-- jmeter生成html格式的结果报告的路径-->
-    <property name="jmeter.result.html.dir" value="../../report"/>
-    <!-- 生成的报告的前缀名，建议设置成英文，否则部分Linux系统会乱码 -->
-    <property name="ReportName" value="Baidu_AutoTest_Report"/>
+    <property name="jmeter.result.html.dir" value="../../reports"/>
+    <!-- 生成的报告的前缀名，不要修改，改了也没用 -->
+    <property name="ReportName" value="test"/>
 
-    <property name="jmeter.result.jtlName" value="${jmeter.result.jtl.dir}/${ReportName}${time}.jtl"/>
-    <property name="jmeter.result.htmlName" value="${jmeter.result.html.dir}/${ReportName}${time}.html"/>
+    <property name="jmeter.result.jtlName" value="${jmeter.result.jtl.dir}/${ReportName}.jtl"/>
+    <property name="jmeter.result.htmlName" value="${jmeter.result.html.dir}/${ReportName}.html"/>
     <target name="run">
         <antcall target="test"/>
         <antcall target="report"/>
@@ -37,12 +37,7 @@
         <tstamp>
             <format property="report.datestamp" pattern="yyyy-MM-dd HH:mm"/>
         </tstamp>
-        <xslt 
-			  classpathref="xslt.classpath" 
-			  force="true" 
-			  in="${jmeter.result.jtlName}" 
-			  out="${jmeter.result.htmlName}" 
-			  style="${jmeter.home}/extras/jmeter-results-detail-report_21.xsl">
+        <xslt classpathref="xslt.classpath" force="true" in="${jmeter.result.jtlName}" out="${jmeter.result.htmlName}" style="${jmeter.home}/extras/jmeter-results-detail-report_21.xsl">
 			  <param name="dateReport" expression="${report.datestamp}"/>
 			  <param name="titleReport" expression="${report.title}"/>
 			  <param name="showData" expression="${show-data}"/>

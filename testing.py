@@ -4,7 +4,8 @@
 import os
 import re
 import time
-from threading import Lock
+import shutil
+from threading import Lock, Thread
 from git import Repo
 from sendEmail import sendMsg
 from logger import logger, cfg, handle_exception
@@ -12,9 +13,14 @@ from logger import logger, cfg, handle_exception
 
 class Testing(object):
     def __init__(self):
+        self.interval = int(cfg.getConfig('interval'))
+        self.tasking = []
         self.lock = Lock()
 
-    def run(self, case_email_path):
+        t = Thread(target=self.lookup)
+        t.start()
+
+    def run(self, paths):
         """
         执行测试任务
         :param case_email_path: 列表，第一个元素是测试用例文件路径，第二个元素是收件人的txt文件路径
@@ -30,63 +36,38 @@ class Testing(object):
         except Exception as err:
             logger.error(err)
 
-        file_name = None
-        error_msg = None
-        case_path = case_email_path[0]
-        email_path = case_email_path[1]
-        build_path = os.path.join(case_path, 'build.xml')
+        build_path = paths["build_file"]
         logger.info(f'开始执行测试任务{build_path}')
 
         try:
-            start_time = time.strftime('%Y-%m-%d %H:%M:%S')
-            res = os.popen('ant -f {}'.format(build_path)).readlines()  # 执行测试，并等待测试完成
-            logger.debug(res)
-            length = len(res)
-            for i in range(length-1, -1, -1):
-                if 'Failed' in res[i]:    # 如果有失败日志，打印出
-                    error_msg = '{}\n{}'.format(res[i], res[i-1])
-                    logger.error(error_msg)
-                    break
-                if 'xslt' in res[i] and 'Processing' in res[i] and 'to' in res[i]:  # 获取测试报告文件名
-                    line = res[i].strip()
-                    logger.debug(line)
-                    if '/' in line:
-                        file_name = line.split('/')[-1]
-                    else:
-                        file_name = line.split('\\')[-1]
-                    logger.info(file_name)
-                    break
-
-            del res
-            if file_name:
-                logger.info('测试任务执行完成')
-                time.sleep(2)
-                msg = self.parse_html(file_name, case_path)    # 重组html
-
-                sendMsg(msg['fail_case'], email_path, failure_num=msg['failure_num'])   # 发送邮件
-
-                string = f"{start_time},{build_path},{msg['total_num']},{msg['failure_num']}\n"
-                self.lock.acquire()
-                logger.info(f'写测试记录到本地, {string}')
-                with open(os.path.join(case_path, cfg.getConfig('record_name')), 'a', encoding='utf-8') as f:
-                    f.write(string)
-                self.lock.release()
-                logger.info('测试完成')
+            if paths["method"] == "GET":
+                shutil.copy(paths["config_file"], paths["new_config_file"])  # 复制，用于jmx执行
             else:
-                error_msg = 'html格式的测试报告未找到'
+                if paths["post_data"].get('params'):
+                    replace_config(paths["config_file"], paths["post_data"]['params'], paths["new_config_file"])
+
+            report_name = f'{paths["system_name"]}-{int(time.time() * 1000)}'
+            _ = os.popen('nohup ant -f {} -DReportName={} &'.format(build_path, report_name))  # 执行测试
+            paths.update({"file_name": report_name})
+            paths.update({"start_time": time.time()})
+            self.tasking.append(paths)
+            time.sleep(3)
         except Exception as err:
-            error_msg = err
             logger.error(err)
 
-        if error_msg:
-            logger.error(f'测试任务执行失败，失败信息：{error_msg}')
-            html = f'<html><body>' \
-                   f'<h3>异常提醒：{build_path} 测试任务执行失败，请重新执行！ 失败信息：{error_msg}</h3>' \
-                   f'<p style="color:blue;">此邮件自动发出，请勿回复。</p></body></html>'
-            try:
-                sendMsg(html, email_path, is_path=False)
-            except Exception as err:
-                logger.error(err)
+    @handle_exception(is_return=True, default_value=False)
+    def post_deal(self, paths):
+        msg = self.parse_html(paths["file_name"] + '.html', paths["case_path"])  # 重组html
+
+        sendMsg(msg['fail_case'], paths, failure_num=msg['failure_num'])  # 发送邮件
+
+        string = f"{paths['start_time']},{paths['build_file']},{msg['total_num']},{msg['failure_num']}\n"
+        logger.info(f'写测试记录到本地, {string}')
+        with open(paths["record_path"], 'a', encoding='utf-8') as f:
+            f.write(string)
+
+        logger.info('测试完成')
+        return True
 
     @handle_exception()
     def parse_html(self, file_name, case_path):
@@ -146,3 +127,52 @@ class Testing(object):
         logger.info('html测试报告处理完成')
         del htmls, html, res, res1, history
         return {'all_case': all_case, 'fail_case': fail_case, 'total_num': total_num[0], 'failure_num': failure_num[0]}
+
+    def lookup(self):
+        while True:
+            time.sleep(2)
+            n = len(self.tasking)
+            logger.info(f'当前正在执行的任务数为{n}')
+            inds = []
+            for i in range(n):
+                html_path = os.path.join(cfg.getConfig('report_path'), self.tasking[i]["file_name"]) + '.html'
+                logger.info(html_path)
+                if not os.path.exists(html_path):
+                    if time.time() - self.tasking[i]["start_time"] < self.interval:
+                        continue
+                    else:
+                        logger.error(f'测试任务执行超时')
+                        inds.append(i)
+                        html = f'<html><body>' \
+                               f'<h3>异常提醒：{self.tasking[i]["build_file"]} 测试任务执行超时，请检查！</h3>' \
+                               f'<p style="color:blue;">此邮件自动发出，请勿回复。</p></body></html>'
+                        try:
+                            sendMsg(html, self.tasking[i], is_path=False)
+                        except Exception as err:
+                            logger.error(err)
+                else:
+                    time.sleep(1)
+                    logger.info('测试任务执行完成')
+                    flag = self.post_deal(self.tasking[i])
+                    if flag:
+                        inds.append(i)
+
+            for j in range(len(inds) - 1, -1, -1):
+                self.tasking.pop(inds[j])
+
+
+def replace_config(src, new_dict, dst):
+    old_dict = {}
+    with open(src, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    for line in lines:
+        k_v = line.split('//')[0].split('=')
+        old_dict.update({k_v[0].strip(): k_v[1].strip()})
+
+    for k, v in new_dict.items():
+        old_dict.update({k: v})
+
+    lines = [f'{k}={v}\n' for k, v in old_dict.items()]
+    with open(dst, 'w', encoding='utf-8') as f:
+        f.writelines(lines)
