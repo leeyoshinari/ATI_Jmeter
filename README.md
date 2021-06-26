@@ -44,7 +44,11 @@
 2、克隆repository<br>
     ```git clone https://github.com/leeyoshinari/ATI_Jmeter.git``` <br>
 
-3、测试用例放置<br>
+3、用例编写<br>
+    在编写JMeter用例时，需要读取配置文件config_default.txt中的变量，然后将变量传递到JMeter中。<br>
+    读取变量的方法是在beanshell中写Java脚本完成的，具体Java脚本详见`beanshell`中的脚本。
+
+4、测试用例放置<br>
 > (1)所有测试用例放在一个统一的文件夹中，例如`testCase`文件夹；<br>
 > (2)针对不同系统的不同测试用例，可单独再放入一个文件夹中管理，例如：百度的测试用例放在`baidu`中、百度的BVT测试用例放在`baidu_bvt`中、腾讯的测试用例放在`tencent`中；<br>
 > (3)每个系统的测试用例文件夹中，都需要放一个配置好的`build.xml`文件；注意：所有系统的测试报告路径必须是同一个文件夹；<br>
@@ -56,19 +60,19 @@
 get请求，jmeter参数和邮件信息为默认值，post请求传的参数可以覆盖默认值。<br>
 post请求传参示例：`{"params": {"ip": "127.0.0.1", "port": "9998"}, "email": {"subject": "腾讯接口自动化测试报告", "receiveName": "tencent_all", "receiveEmail": "aaa@baidu.com"}}`
 
-4、修改配置文件config.conf<br>
+5、修改配置文件config.conf<br>
 > (1)线程池大小，建议设置1就够了；如确实调度较多测试用例的执行，可酌情增加；<br>
 > (2)测试用例路径和测试报告路径，建议使用绝对路径；其中测试报告路径应和`build.xml`文件中的路径保持一致；<br>
 > (3)如接口自动化脚本维护在git上，可配置git本地仓库路径，每次执行任务前，自动从git上拉取最新版本，默认拉取主分支；前提是已经clone到本地了；<br>
 > (4)邮件发送配置，请确认SMTP服务配置正确；邮箱登录密码配置，请在`sendEmail.py`文件中第70行设置，如果密码不想让其他人看到，请将该py文件进行编译，或者直接将这个repository打包，具体打包方法，请往下看；<br>
 
-5、运行<br>
+6、运行<br>
 > Linux:<br>
 > ```nohup python3 server.py &``` <br>
 > Windows<br>
 > ```python server.py``` <br>
 
-6、打包<br>
+7、打包<br>
 经过前5步，如果该repository可以启动，且执行测试任务成功，则可以进行打包，使用pyinstaller进行打包。<br>
 pyinstaller安装自行查找教程，须确保安装正确，否则打包会报错，下面直接进行打包：
 > (1)进入ATI_Jmeter文件夹，执行命令：<br>
@@ -80,9 +84,9 @@ pyinstaller安装自行查找教程，须确保安装正确，否则打包会报
 > (4)如需要部署在其他服务器上，可将dist整个文件夹拷贝到其他服务器，启动server <br>
 > ```nohup ./server &```
 
-7、CI/CD，以Jenkins为例，在Jenkins构建后操作中增加一个get请求，请求的url为`http://IP:PORT/run?systemName=系统名称`，此处系统名称应和testCase用例文件夹中的对应的系统名称保持一致。
+8、CI/CD，以Jenkins为例，在Jenkins构建后操作中增加一个get请求，请求的url为`http://IP:PORT/run?systemName=系统名称`，此处系统名称应和testCase用例文件夹中的对应的系统名称保持一致。
 
-8、如果你所在的项目还没有用到CI/CD，或者项目本身有较多配置项，每次手动更改配置重启项目后，也想自动执行测试任务；亦或是你不想配置CI/CD，则需要执行客户端；<br>
+9、如果你所在的项目还没有用到CI/CD，或者项目本身有较多配置项，每次手动更改配置重启项目后，也想自动执行测试任务；亦或是你不想配置CI/CD，则需要执行客户端；<br>
 进入client文件夹，将脚本和配置文件拷贝到项目所在的服务器上，运行即可，也可以按照步骤6的方式进行打包。<br>
 
 修改配置文件config.conf：<br>

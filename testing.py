@@ -5,7 +5,7 @@ import os
 import re
 import time
 import shutil
-from threading import Lock, Thread
+from threading import Thread
 from git import Repo
 from sendEmail import sendMsg
 from logger import logger, cfg, handle_exception
@@ -15,7 +15,6 @@ class Testing(object):
     def __init__(self):
         self.interval = int(cfg.getConfig('interval'))
         self.tasking = []
-        self.lock = Lock()
 
         t = Thread(target=self.lookup)
         t.start()
@@ -23,7 +22,7 @@ class Testing(object):
     def run(self, paths):
         """
         执行测试任务
-        :param case_email_path: 列表，第一个元素是测试用例文件路径，第二个元素是收件人的txt文件路径
+        :param paths: 字典
         :return:
         """
         try:
@@ -102,10 +101,8 @@ class Testing(object):
         jump_url = f'<span style="font-size: 125%; margin-left: 2.5%;">如需查看详细测试结果，<a href="{url}">请点我</a></span>'
 
         # 添加历史数据
-        self.lock.acquire()
         with open(os.path.join(case_path, cfg.getConfig('record_name')), 'r', encoding='utf-8') as f:
             history = f.readlines()
-        self.lock.release()
         for line in history:
             datas = line.split(',')
             total_num.append(int(datas[-2]))

@@ -45,7 +45,6 @@ def handle_exception(errors=(Exception,), is_return=False, default_value=None):
     :param default_value: If 'is_return' is True, return 'default_value'.
     :return: 'default_value'
     """
-
     def decorator(func):
         def decorator1(*args, **kwargs):
             if is_return:

@@ -1,0 +1,32 @@
+import java.io.*;
+import java.util.*;
+import org.apache.jmeter.services.FileServer;
+
+public Map getEnvConf(String filePath) throws IOException {
+        File file = new File(filePath);
+        FileReader fileReader = new FileReader(file);
+        InputStreamReader isr = new InputStreamReader(new FileInputStream(file), "UTF-8");
+        BufferedReader reader = new BufferedReader(isr);
+        String txt = "";
+        int lines = 0;
+        String content = "";
+        Map confMap = new HashMap();
+        while ((txt = reader.readLine()) != null) {
+            txt = txt.trim();
+            String[]  item = txt.split("=");
+            String[]  itemEnd = item[1].split("//");
+            confMap.put(item[0].trim(), itemEnd[0].trim());
+        }
+        System.out.println(confMap);
+        reader.close();
+        fileReader.close();
+        return confMap;
+    }
+
+	 String baseDir=FileServer.getFileServer().getBaseDir();
+	 String confFileName = "config.txt";
+	 String filePath = baseDir + System.getProperty("file.separator") + confFileName;
+      Map envConfMap = getEnvConf(filePath);
+     for(String key : envConfMap.keySet()){
+            vars.put(key, envConfMap.get(key));
+        }
